@@ -35,14 +35,24 @@ class Particle {
     }
 
     update(voltage, amperage) {
-        // Speed based on voltage (pressure) - logarithmic scaling for large range
-        const voltageNormalized = Math.min(voltage / 1000000, 1);
-        const baseSpeed = Math.pow(voltageNormalized, 0.5) * 12 + 1;
+        // Speed based on voltage (pressure) - linear scaling for better visibility
+        let baseSpeed;
+        if (voltage < 10) {
+            // Very slow at low voltages
+            baseSpeed = voltage * 0.05;
+        } else if (voltage < 1000) {
+            // Gradual increase up to 1000V
+            baseSpeed = 0.5 + (voltage / 1000) * 5;
+        } else {
+            // Logarithmic for high voltages to keep visible
+            const logScale = Math.log10(voltage / 1000);
+            baseSpeed = 5.5 + logScale * 3;
+        }
         this.x += baseSpeed + this.speedOffset;
 
         // Wobble effect
         this.wobbleOffset += 0.1;
-        const wobbleAmount = 2 + Math.pow(voltageNormalized, 0.5) * 4;
+        const wobbleAmount = 2 + (Math.min(voltage, 10000) / 10000) * 4;
         this.y += Math.sin(this.wobbleOffset) * wobbleAmount * 0.1;
 
         // Size pulsing effect based on power
